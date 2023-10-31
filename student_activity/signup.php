@@ -1,4 +1,5 @@
 <?php
+session_start();
     require 'connect.php';
     if (isset($_POST['submit'])) {
       $studentID = $_POST['studentID'];
@@ -7,8 +8,21 @@
       $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
       $sql = "insert into student(studentID ,studentName , majorID , password)
        values('$studentID', '$studentName', '$majorID', '$password')";
-       
+      
+      try{ 
        $conn->query($sql);
+       $_SESSION['user'] = [
+        'studentID'=>$studentID,
+        'studentName'=>$studentName];
+       header('location:index.php');
+       exit;
+      }
+      catch(mysqli_sql_exception) {
+        $err = "Duplicate StudenID $studentID already exists.";
+      }
+      catch(exception $e){
+        $err = $e;
+      }
     }
     
 ?>
@@ -46,11 +60,15 @@
       }
     </script>
   </head>
+  
   <body class="d-flex align-items-center py-4 bg-body-tertiary">
     <main class="form-signin w-100 m-auto">
       <form action="signup.php" method="post" onsubmit="validate()">
         <img class="mb-4" src="img/one piece.png" alt="" width="200" height="">
-        <!-- <img src="..." class="card-img" alt="...">         -->
+       <?php if(isset($err)) {
+          echo "<div class = 'alert alert-danger'>$err</div>";
+        }
+        ?>
         <h1 class="h3 mb-3 fw-normal">Please sign up</h1>
         <div class="form-floating mb-2">
           <input required name="studentID" type="text" class="form-control" id="student_id" placeholder="">
